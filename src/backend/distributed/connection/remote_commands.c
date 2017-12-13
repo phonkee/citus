@@ -12,7 +12,6 @@
 #include "pgstat.h"
 
 #include "libpq-fe.h"
-#include "libpq-int.h"
 
 #include "distributed/connection_management.h"
 #include "distributed/remote_commands.h"
@@ -590,8 +589,10 @@ PutRemoteCopyData(MultiConnection *connection, const char *buffer, int nbytes)
 	 * cycles spent in networking system calls.
 	 */
 
-	if (pgConn->outCount > MAX_PUT_COPY_DATA_BUFFER_SIZE)
+	connection->copyBytesWrittenSinceLastFlush += nbytes;
+	if (connection->copyBytesWrittenSinceLastFlush > MAX_PUT_COPY_DATA_BUFFER_SIZE)
 	{
+		connection->copyBytesWrittenSinceLastFlush = 0;
 		return FinishConnectionIO(connection, allowInterrupts);
 	}
 
@@ -626,6 +627,8 @@ PutRemoteCopyEnd(MultiConnection *connection, const char *errormsg)
 	}
 
 	/* see PutRemoteCopyData() */
+
+	connection->copyBytesWrittenSinceLastFlush = 0;
 
 	return FinishConnectionIO(connection, allowInterrupts);
 }
