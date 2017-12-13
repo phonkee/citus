@@ -80,7 +80,6 @@ typedef MultiNode *(*RuleApplyFunction) (MultiNode *leftNode, MultiNode *rightNo
 static RuleApplyFunction RuleApplyFunctionArray[JOIN_RULE_LAST] = { 0 }; /* join rules */
 
 /* Local functions forward declarations */
-static bool SingleRelationRepartitionSubquery(Query *queryTree);
 static DeferredErrorMessage * DeferErrorIfUnsupportedSubqueryPushdown(Query *
 																	  originalQuery,
 																	  PlannerRestrictionContext
@@ -99,9 +98,6 @@ static bool RangeTableArrayContainsAnyRTEIdentities(RangeTblEntry **rangeTableEn
 static Relids QueryRteIdentities(Query *queryTree);
 static DeferredErrorMessage * DeferErrorIfUnsupportedSublinkAndReferenceTable(
 	Query *queryTree);
-static DeferredErrorMessage * DeferErrorIfCannotPushdownSubquery(Query *subqueryTree,
-																 bool
-																 outerMostQueryHasLimit);
 static DeferredErrorMessage * DeferErrorIfUnsupportedUnionQuery(Query *queryTree,
 																bool
 																outerMostQueryHasLimit);
@@ -470,7 +466,7 @@ SubqueryMultiNodeTree(Query *originalQuery, Query *queryTree,
  * to ensure that Citus supports the subquery. Also, this function is designed to run
  * on the original query.
  */
-static bool
+bool
 SingleRelationRepartitionSubquery(Query *queryTree)
 {
 	List *rangeTableIndexList = NULL;
@@ -900,7 +896,7 @@ DeferErrorIfUnsupportedSublinkAndReferenceTable(Query *queryTree)
  * limit, we let this query to run, but results could be wrong depending on the
  * features of underlying tables.
  */
-static DeferredErrorMessage *
+DeferredErrorMessage *
 DeferErrorIfCannotPushdownSubquery(Query *subqueryTree, bool outerMostQueryHasLimit)
 {
 	bool preconditionsSatisfied = true;
